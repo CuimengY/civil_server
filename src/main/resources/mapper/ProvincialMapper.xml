@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+<mapper namespace="com.exam.civil.mapper.ProvincialMapper">
+    <!--namespace根据自己需要创建的的mapper的路径和名称填写-->
+    <select id="selectUnits" resultType="com.exam.civil.pojo.ProvincialJob">
+        select unit from provincialjob p group by unit;
+    </select>
+
+    <select id="selectDepartment" resultType="com.exam.civil.pojo.ProvincialJob">
+        select department, sum(count) as count from provincialjob p where unit=#{unit} group by department;
+    </select>
+
+    <select id="selectJob" resultType="com.exam.civil.pojo.ProvincialJob">
+        select  * from public.provincialjob where 1=1
+        <if test="unit != null">
+            and unit = #{unit}
+        </if>
+        <if test="department != null and department != ''">
+            and department = #{department}
+        </if>
+        <if test="major != null">
+            <bind name="majorInfo" value="'%' + major + '%'"/>
+            and major like #{majorInfo}
+        </if>
+        <if test="qualification != null">
+            and qualification = #{qualification}
+        </if>
+    </select>
+
+    <select id="follow">
+        update provincialjob
+        <if test="isFollow">
+            set followed=true
+        </if>
+        <if test="!isFollow">
+            set followed=false
+        </if>
+         where id=#{id};
+    </select>
+
+    <select id="getFollow" parameterType="com.exam.civil.pojo.ProvincialJob" resultType="com.exam.civil.pojo.ProvincialJob">
+        select  * from public.provincialjob where followed = true
+        <if test="unit != null">
+            and unit = #{unit}
+        </if>
+        <if test="department != null and department != ''">
+            and department = #{department}
+        </if>
+        <if test="major != null">
+            <bind name="majorInfo" value="'%' + major + '%'"/>
+            and major like #{majorInfo}
+        </if>
+        <if test="qualification != null">
+            and qualification = #{qualification}
+        </if>
+    </select>
+    <select id="selectCount" parameterType="com.exam.civil.pojo.ProvincialJob" resultType="com.exam.civil.pojo.ProvincialJob">
+        select qualification,sum(count) as count from provincialjob p  where unit=#{unit} and department =#{department} group by  qualification;
+    </select>
+</mapper>
