@@ -27,5 +27,8 @@ public class Result<T> implements Serializable {
     public static <T> Result failed(String message) {
         return new Result(1,message,null);
     }
+    public static <T> Result failed(Integer code, String message) {
+        return new Result(code,message,null);
+    }
 
 }
