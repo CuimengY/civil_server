@@ -3,6 +3,8 @@ package com.exam.civil.controller;
 import com.exam.civil.mapper.ProvincialMapper;
 import com.exam.civil.pojo.NationalJob;
 import com.exam.civil.pojo.ProvincialJob;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -35,9 +37,11 @@ public class ProvincialController {
 
     @RequestMapping("/jobs")
     @ResponseBody
-    public List<ProvincialJob> getJobs(ProvincialJob info) {
+    public PageInfo<ProvincialJob> getJobs(ProvincialJob info) {
+        PageHelper.startPage(info.getPage(),info.getPageSize());
         List<ProvincialJob> jobs = provincialMapper.selectJob(info);
-        return jobs;
+        PageInfo<ProvincialJob> pageInfo = new PageInfo<>(jobs);
+        return pageInfo;
     }
 
     @RequestMapping("/follow")

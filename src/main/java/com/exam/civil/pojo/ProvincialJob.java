@@ -22,4 +22,6 @@ public class ProvincialJob {
     private String psychologicaltest;
     private String physicalfitness;
     private Boolean followed;
+    private int page;
+    private int pageSize;
 }
