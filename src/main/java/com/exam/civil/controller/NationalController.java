@@ -19,12 +19,17 @@ package com.exam.civil.controller;
 import com.exam.civil.mapper.NationalMapper;
 import com.exam.civil.pojo.NationalJob;
 import com.exam.civil.pojo.Result;
+import org.apache.poi.ss.usermodel.*;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
+import java.io.OutputStream;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -105,6 +110,81 @@ public class NationalController {
         System.out.println(info);
         List<NationalJob> counts =  nationalMapper.selectCount(info);
         return Result.success(counts);
+    }
+
+    @RequestMapping("/follow/export")
+    @ResponseBody
+    public void exportFile(HttpServletResponse response, NationalJob info) throws IOException {
+        List<NationalJob> jobs =  nationalMapper.selectFollowByInfo(info);
+        final String FILENAME = "关注信息";
+        final String SHEETNAME = "关注列表";
+        Class job = NationalJob.class;
+        //1.创建工作空间
+        Workbook workbook = new XSSFWorkbook();
+        //2.创建工作表
+        Sheet sheet = workbook.createSheet(SHEETNAME);
+        //2.1 创建标题行
+        Row headerRow = sheet.createRow(0);
+        //3.定义一个字体
+        //3.1 创建字体
+        Font headerFont = workbook.createFont();
+        // 3.2 14号字体
+        headerFont.setFontHeightInPoints((short) 14);
+        //4. 声明样式CellStyle
+        // 4.1 创建style
+        CellStyle style = workbook.createCellStyle();
+        // 4.2 将样式设置进style对象
+        style.setFont(headerFont);
+        // 4.3 水平和垂直居中
+        style.setAlignment(HorizontalAlignment.CENTER);
+        style.setVerticalAlignment(VerticalAlignment.CENTER);
+
+        //设置列宽和表头样式
+        String[] headers = {"部门名称","用人司局","招考职位","招考人数","职位简介","专业","学历","政治面貌","工作地点"};
+        for (int i = 0; i < headers.length; i++) {
+            sheet.setColumnWidth(i, 230 * 30);
+            Cell headerCell = headerRow.createCell(i);
+            headerCell.setCellStyle(style);
+            headerCell.setCellValue(headers[i]);
+        }
+        for (int i = 0; i < jobs.size(); i++) {
+            Row row = sheet.createRow(i + 1);
+            for (int j = 0; j < headers.length; j++) {
+                Cell cell = row.createCell(j);
+                if(j == 0) {
+                    cell.setCellValue(jobs.get(i).getDepartmentname());
+                } else if (j == 1) {
+                    cell.setCellValue(jobs.get(i).getBureau());
+                } else if (j == 2) {
+                    cell.setCellValue(jobs.get(i).getName());
+                } else if (j == 3) {
+                    cell.setCellValue(jobs.get(i).getCount());
+                } else if (j == 4) {
+                    cell.setCellValue(jobs.get(i).getIntroduction());
+                } else if (j == 5) {
+                    cell.setCellValue(jobs.get(i).getMajor());
+                } else if (j == 6) {
+                    cell.setCellValue(jobs.get(i).getQualification());
+                } else if (j == 7) {
+                    cell.setCellValue(jobs.get(i).getPolitical());
+                }else if (j == 8) {
+                    cell.setCellValue(jobs.get(i).getWorkposition());
+                }
+                cell.setCellStyle(style);
+            }
+        }
+
+        try (OutputStream out = response.getOutputStream()) {
+            response.setHeader("Content-Disposition","attachment; filename=" + FILENAME);
+            response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=utf-8");
+            response.setCharacterEncoding("utf-8");
+            workbook.write(out);
+            out.flush();
+            out.close();
+            workbook.close();
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
 }
